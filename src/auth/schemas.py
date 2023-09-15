@@ -7,8 +7,6 @@ class UserRead(schemas.BaseUser[int]):
     id: int
     login: str
     email: str
-    education: str
-    role_id: int
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False
@@ -20,9 +18,7 @@ class UserRead(schemas.BaseUser[int]):
 class UserCreate(schemas.BaseUserCreate):
     login: str
     email: str
-    education: str
     password: str
-    role_id: int
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
     is_verified: Optional[bool] = False
