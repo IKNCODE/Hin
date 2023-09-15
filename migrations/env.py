@@ -18,7 +18,8 @@ from src.auth.models import *
 from src.auth.models import User
 
 config = context.config
-from auth.models import Base
+from auth.models import Base as AuthBase
+from post.models import Base as PostBase
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 
@@ -40,7 +41,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = [PostBase.metadata, AuthBase.metadata]
 
 
 def run_migrations_offline() -> None:
