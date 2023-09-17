@@ -15,9 +15,8 @@ DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{D
 
 class Base(DeclarativeBase):
     pass
-
 class User(SQLAlchemyBaseUserTable[int], Base):
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     login = Column(String)
     hashed_password: str = Column(String(length=1024), nullable=False)
     email = Column(String)

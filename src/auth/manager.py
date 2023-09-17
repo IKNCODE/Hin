@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, schemas, models, IntegerIDMixin, exceptions
 
+
 from auth.models import User, get_user_db
 
 from fastapi_users import FastAPIUsers
@@ -10,6 +11,7 @@ from fastapi_users.authentication import CookieTransport, AuthenticationBackend
 from fastapi_users.authentication import JWTStrategy
 
 from auth.models import User
+
 
 SECRET = "ikncode"
 

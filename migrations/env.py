@@ -41,7 +41,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [PostBase.metadata, AuthBase.metadata]
+target_metadata = [AuthBase.metadata, PostBase.metadata]
 
 
 def run_migrations_offline() -> None:

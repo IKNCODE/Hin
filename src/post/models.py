@@ -21,28 +21,28 @@ class Post(Base):
     __tablename__ = "post"
 
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     author_id = Column(Integer, ForeignKey(User.id), nullable=False)
-    date_create = Column(DateTime, nullable=False)
+    date_create = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 
 class Like(Base):
     __tablename__ = "like"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     account_id = Column(Integer, ForeignKey(User.id), nullable=False)
     post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
-    date = Column(DateTime, nullable=False)
+    date = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 
 class Comment(Base):
     __tablename__ = "comment"
 
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String, nullable=False)
     account_id = Column(Integer, ForeignKey(User.id), nullable=False)
     post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
-    date = Column(String, nullable=False)
+    date = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 
 
