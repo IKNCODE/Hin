@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, insert, delete
@@ -45,6 +45,24 @@ async def add_post(new_post: PostCreate, user: User = Depends(current_user), ses
         await session.execute(query)
         await session.commit()
         return {"status" : new_post}
+    except Exception as ex:
+        return {"error": ex}
+
+""" Удаление поста """
+
+@post_router.delete("/delete")
+async def delete_post(post_id: int, session: AsyncSession = Depends(get_async_session)):
+    try:
+        aut_len = await session.execute(select(Like).where(Like.post_id == post_id)) # получение кол-ва лайков
+        while len(aut_len.mappings().all()) >= 1:  # Удаление всех лайков (т.к. привязка к постам)
+            dis = delete(Like).where(Like.post_id == post_id)
+            await session.execute(dis)
+            await session.commit()
+            aut_len = await session.execute(select(Like).where(Like.post_id == post_id))
+        query = delete(Post).where(Post.id == post_id)
+        await session.execute(query)
+        await session.commit()
+        return {"status" : "deleted"}
     except Exception as ex:
         return {"error": ex}
 
