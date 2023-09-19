@@ -30,9 +30,7 @@ class LikeCreate(BaseModel):
 class CommentCreate(BaseModel):
     text: str
     account_id: int
-    post_id: PostCreate
-    date: datetime
-
+    post_id: int
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat(),

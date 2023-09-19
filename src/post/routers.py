@@ -100,4 +100,38 @@ async def like_post(post : int, session: AsyncSession = Depends(get_async_sessio
     except Exception as ex:
         return {"error" : ex}
 
+comment_router = APIRouter(prefix="/comment", tags=["Comment"]) # Роутер для работы с комментариями
+
+""" Получение комментариев определенного поста """
+@comment_router.get("/")
+async def comment_of_post(post_id: int, session: AsyncSession = Depends(get_async_session)):
+    try:
+        query = select(Comment).where(Comment.post_id == post_id)
+        result = await session.execute(query)
+        return result.mappings().all()
+    except Exception as ex:
+        return {"error" : ex}
+
+""" Запись комментария под постом """
+@comment_router.post("/write_comment")
+async def add_comment(comment: CommentCreate, user : User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
+    try:
+        comment.account_id = user.id
+        query = insert(Comment).values(**comment.dict())
+        await session.execute(query)
+        await session.commit()
+        return {"status" : 200}
+    except Exception as ex:
+        return {"error" : ex}
+
+@comment_router.delete("/delete_comment")
+async def delete_comment(comment_id: int, session: AsyncSession = Depends(get_async_session)):
+    try:
+        del_comm = delete(Comment).where(Comment.id == comment_id)
+        await session.execute(del_comm)
+        await session.commit()
+        return {"status" : "deleted"}
+    except Exception as ex:
+        return {"error": ex}
+
 

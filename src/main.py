@@ -9,7 +9,7 @@ from auth.models import User
 from auth.manager import current_user
 from auth.schemas import UserRead, UserCreate
 
-from post.routers import post_router, like_router
+from post.routers import post_router, like_router, comment_router
 
 
 app = FastAPI()
@@ -31,6 +31,7 @@ app.include_router(
 
 app.include_router(post_router)
 app.include_router(like_router)
+app.include_router(comment_router)
 
 @app.get("/")
 async def root():
