@@ -17,6 +17,7 @@ DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{D
 class Base(DeclarativeBase):
     pass
 
+""" Таблица постов """
 class Post(Base):
     __tablename__ = "post"
 
@@ -27,6 +28,7 @@ class Post(Base):
     author_id = Column(Integer, ForeignKey(User.id), nullable=False)
     date_create = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 
+""" Таблица лайков """
 class Like(Base):
     __tablename__ = "like"
 
@@ -35,6 +37,8 @@ class Like(Base):
     post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
     date = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
 
+
+""" Таблица комментариев """
 class Comment(Base):
     __tablename__ = "comment"
 

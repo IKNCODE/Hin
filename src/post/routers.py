@@ -124,6 +124,7 @@ async def add_comment(comment: CommentCreate, user : User = Depends(current_user
     except Exception as ex:
         return {"error" : ex}
 
+""" Удаления комментария под постом """
 @comment_router.delete("/delete_comment")
 async def delete_comment(comment_id: int, session: AsyncSession = Depends(get_async_session)):
     try:

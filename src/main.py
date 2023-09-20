@@ -33,19 +33,6 @@ app.include_router(post_router)
 app.include_router(like_router)
 app.include_router(comment_router)
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-@app.get("/protected-route")
-def protected_route(user: User = Depends(current_user)): # Получаем последнего пользователя
-    return f"Hello, {user}"
-
 @app.get("/users/me")
 async def read_users_me(current: Annotated[User, Depends(current_user)]):
     return current
