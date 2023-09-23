@@ -1,6 +1,6 @@
-from typing import Annotated, Union
+from typing import Annotated, Union, Optional
 
-from fastapi import FastAPI, Cookie, Depends
+from fastapi import FastAPI, Cookie, Depends, Request
 from fastapi_users import FastAPIUsers
 
 from auth.manager import auth_backend, fastapi_users
@@ -13,8 +13,6 @@ from post.routers import post_router, like_router, comment_router
 
 
 app = FastAPI()
-
-
 
 
 app.include_router(
@@ -32,6 +30,10 @@ app.include_router(
 app.include_router(post_router)
 app.include_router(like_router)
 app.include_router(comment_router)
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request, current: Annotated[User, Depends(current_user)] = None):
+    return templates.TemplateResponse("index.html", {"request" : request, "current" : current})
 
 @app.get("/users/me")
 async def read_users_me(current: Annotated[User, Depends(current_user)]):
