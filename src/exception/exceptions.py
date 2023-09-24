@@ -9,8 +9,18 @@ class IndividualException(Exception): #Собственный класс оши�
 app = FastAPI()
 
 @app.exception_handler(IndividualException)
+async def not_found_exception(request: Request, exc: IndividualException):
+    return JSONResponse(status_code=404,
+                        content={"message" : "Not found"})
+
+@app.exception_handler(IndividualException)
+async def email_already_use_exception(request: Request, exc: IndividualException):
+    return JSONResponse(status_code=502,
+                        content={"message" : f"{exc.name} email is already use"})
+
+@app.exception_handler(IndividualException)
 async def email_exception(request: Request, exc: IndividualException):
     return JSONResponse(
         status_code=501,
-        content={"message" : f"{name} address dosn't exsist!"}
+        content={"message" : f"{exc.name} address dosn't exsist!"},
     )
