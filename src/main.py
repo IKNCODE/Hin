@@ -31,9 +31,9 @@ app.include_router(post_router)
 app.include_router(like_router)
 app.include_router(comment_router)
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def index(request: Request, current: Annotated[User, Depends(current_user)] = None):
-    return templates.TemplateResponse("index.html", {"request" : request, "current" : current})
+    return {"request" : request, "current" : current}
 
 @app.get("/users/me")
 async def read_users_me(current: Annotated[User, Depends(current_user)]):
