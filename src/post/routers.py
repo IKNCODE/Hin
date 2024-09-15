@@ -1,11 +1,12 @@
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, insert, delete
+from sqlalchemy import select, insert, delete, func
 from post.models import Post, Like, Comment
 from post.schemas import PostCreate, LikeCreate, CommentCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.manager import current_user
+from random import randint
 from auth.models import User
 
 from database import get_async_session
@@ -23,6 +24,18 @@ async def get_all_post(session: AsyncSession = Depends(get_async_session)):
         return result.mappings().all()
     except Exception as ex:
         return {"error": ex}
+
+""" Просмотр рандомного поста из топ 10 """
+@post_router.get("/top")
+async def get_top_post(session: AsyncSession = Depends(get_async_session)):
+    try:
+        query = select(Post.name, func.count(Like.id)).join(Like, Post.id == Like.post_id).group_by(Post.id).limit(10)
+        result = await session.execute(query)
+        return result.mappings().all()[randint(0,10)]
+    except Exception as ex:
+        return {"error": ex}
+
+
 
 """ Просмотр всех постов определенного пользователя """
 
@@ -68,7 +81,7 @@ async def delete_post(post_id: int, session: AsyncSession = Depends(get_async_se
 
 like_router = APIRouter(prefix="/like", tags=["Like"]) # Роутер для работы с лайками
 
-""" Возможность поставить лайк (необходимо указать user_id и post_id """
+""" Возможность поставить лайк (необходимо указать user_id и post_id) """
 
 @like_router.post("/")
 async def like_post(new_like: LikeCreate, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
