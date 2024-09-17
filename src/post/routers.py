@@ -8,11 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.manager import current_user
 from random import randint
 from auth.models import User
+import json
+import redis
 
 from database import get_async_session
 
 
 post_router = APIRouter(prefix="/post", tags=["Post"]) # Роутер для работы с постами
+
+r = redis.Redis(host='localhost', port=6379, db=0) # Подключение Redis для кеширования данных
+
+TTL = 100 # Время жизни ключа в Redis (100 секунд)
+
+
 
 """ Просмотр всех постов """
 
@@ -25,21 +33,64 @@ async def get_all_post(session: AsyncSession = Depends(get_async_session)):
     except Exception as ex:
         return {"error": ex}
 
-""" Просмотр рандомного поста из топ 10 """
-@post_router.get("/top")
-async def get_top_post(session: AsyncSession = Depends(get_async_session)):
+""" Просмотр определенного поста """
+@post_router.get("/{id}")
+async def get_post_by_id(id : int, session: AsyncSession = Depends(get_async_session)):
     try:
-        query = select(Post.name, func.count(Like.id)).join(Like, Post.id == Like.post_id).group_by(Post.id).limit(10)
-        result = await session.execute(query)
-        return result.mappings().all()[randint(0,10)]
+        result = await cache_post_id(id, session) # Получаем данные из кеша
+        return json.loads(result)
     except Exception as ex:
         return {"error": ex}
 
+""" Функция поиска поста с кеша Redis """
+async def cache_post_id(id: int, session: AsyncSession = Depends(get_async_session)):
+    try:
+        if r.get(str(id)) == None: # Если данный пост не находится в кеше, то тогда обращаемся к бд сервера и сохраняем результат в кеше
+            query = select(Post.id, Post.name, Post.author_id, Post.content, Post.date_create, func.count(Like.id).label("likes")).where(Post.id == id).join(Like, Post.id == Like.post_id).group_by( Post.id)
+            result = await session.execute(query)
+            if result == None:
+                return None
+            else:
+                res_dict = dict(result.mappings().all()[0])
+                json_dict = json.dumps(res_dict, default=str)
+                r.setex(str(id),TTL,json_dict)
+                return json_dict
+        else:
+            return r.get(str(id))
+    except Exception as ex:
+        return {"Exception": ex}
+
+""" Просмотр рандомного поста из топ 10 """
+@post_router.get("/top/top")
+async def get_top_post(session: AsyncSession = Depends(get_async_session)):
+    try:
+        result = await cache_random_post_id(session)
+        return json.loads(result)
+    except Exception as ex:
+        return {"error": ex}
+
+""" Функция поиска рандомного поста из топ 10 с кеша Redis """
+async def cache_random_post_id(session: AsyncSession = Depends(get_async_session)):
+    try:
+        if r.get("top") == None: # Если в кеше отсутствуют тот самый1 пост, то тогда обращаемся к бд сервера и сохраняем результат в кеше
+            query = select(Post.name, func.count(Like.id)).join(Like, Post.id == Like.post_id).group_by(Post.id).limit(10)
+            result = await session.execute(query)
+            if result == None:
+                return None
+            else:
+                res_dict = dict(result.mappings().all()[randint(0,10)])
+                json_dict = json.dumps(res_dict, default=str)
+                r.setex("top",TTL,json_dict)
+                return json_dict
+        else:
+            return r.get("top")
+    except Exception as ex:
+        return {"Exception": ex}
 
 
 """ Просмотр всех постов определенного пользователя """
 
-@post_router.get("/{user_id}")
+@post_router.get("/user/{user_id}")
 async def get_user_posts(user_id: int, session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(Post).where(Post.author_id == user_id)
