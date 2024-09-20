@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends
+import aiofiles
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy import select, insert, delete, func
 from post.models import Post, Like, Comment
 from post.schemas import PostCreate, LikeCreate, CommentCreate
@@ -10,7 +11,8 @@ from random import randint
 from auth.models import User
 import json
 import redis
-
+from openpyxl import *
+from fastapi.responses import StreamingResponse
 from database import get_async_session
 
 
@@ -109,6 +111,25 @@ async def add_post(new_post: PostCreate, user: User = Depends(current_user), ses
         await session.execute(query)
         await session.commit()
         return {"status" : new_post}
+    except Exception as ex:
+        return {"error": ex}
+
+""" Добавление нескольких постов (Excel, JSON) """
+@post_router.post("/batch/")
+async def add_batch_posts(new_posts: UploadFile=File(), user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
+    try:
+        async with aiofiles.open(f"../excel_files/{new_posts.filename}", 'wb') as out_file:
+            content = await new_posts.read()  # async read
+            await out_file.write(content)  # async write
+            wb = load_workbook(f"../excel_files/{new_posts.filename}")
+            sheet = wb.get_sheet_by_name("Шаблон")
+            excel_list = []
+            for i in range(1, sheet.max_row):
+                excel_list.append(( sheet[f'A{str(i+1)}'].value, sheet[f'B{str(i+1)}'].value, user.id , sheet[f'C{str(i+1)}'].value))
+            query = insert(Post).values([{'name': name, 'content': content, 'author_id': author_id, 'date_create': date_create} for name, content, author_id, date_create in excel_list])
+            await session.execute(query)
+            await session.commit()
+        return {"text" : "ld"}
     except Exception as ex:
         return {"error": ex}
 
