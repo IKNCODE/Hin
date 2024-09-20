@@ -121,15 +121,17 @@ async def add_batch_posts(new_posts: UploadFile=File(), user: User = Depends(cur
         async with aiofiles.open(f"../excel_files/{new_posts.filename}", 'wb') as out_file:
             content = await new_posts.read()  # async read
             await out_file.write(content)  # async write
-            wb = load_workbook(f"../excel_files/{new_posts.filename}")
+            await out_file.close()
+            wb = load_workbook(out_file.name)
             sheet = wb.get_sheet_by_name("Шаблон")
             excel_list = []
             for i in range(1, sheet.max_row):
-                excel_list.append(( sheet[f'A{str(i+1)}'].value, sheet[f'B{str(i+1)}'].value, user.id , sheet[f'C{str(i+1)}'].value))
+                excel_list.append(( sheet[f'A{str(i+1)}'].value, sheet[f'B{str(i+1)}'].value, user.id, sheet[f'C{str(i+1)}'].value))
             query = insert(Post).values([{'name': name, 'content': content, 'author_id': author_id, 'date_create': date_create} for name, content, author_id, date_create in excel_list])
             await session.execute(query)
             await session.commit()
-        return {"text" : "ld"}
+            wb.close()
+        return {"Status" : "Data has successfully been saved"}
     except Exception as ex:
         return {"error": ex}
 
