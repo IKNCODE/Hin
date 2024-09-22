@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 
 import aiofiles
+import openpyxl.utils.exceptions
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy import select, insert, delete, func
 from post.models import Post, Like, Comment
@@ -106,8 +107,7 @@ async def get_user_posts(user_id: int, session: AsyncSession = Depends(get_async
 @post_router.post("/")
 async def add_post(new_post: PostCreate, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     try:
-        new_post.author_id = user.id
-        query = insert(Post).values(**new_post.dict())
+        query = insert(Post).values(**new_post.dict(), author_id=user.id)
         await session.execute(query)
         await session.commit()
         return {"status" : new_post}
@@ -132,8 +132,8 @@ async def add_batch_posts(new_posts: UploadFile=File(), user: User = Depends(cur
             await session.commit()
             wb.close()
         return {"Status" : "Data has successfully been saved"}
-    except Exception as ex:
-        return {"error": ex}
+    except openpyxl.utils.exceptions.InvalidFileException:
+        return {"error": "Invalid file, please choose .xlsx file"}
 
 """ Удаление поста """
 
@@ -159,20 +159,20 @@ like_router = APIRouter(prefix="/like", tags=["Like"]) # Роутер для р�
 
 @like_router.post("/")
 async def like_post(new_like: LikeCreate, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
-    try:
-        aut_len = await session.execute(select(Like).where(Like.account_id == new_like.account_id)) # Проверка, ставил ли пользователь лайк
+    #try:
+        aut_len = await session.execute(select(Like).where(Like.account_id == user.id)) # Проверка, ставил ли пользователь лайк
         if len(aut_len.mappings().all()) >= 1: #В случае если да, лайк снимается
-            dis = delete(Like).where(Like.account_id == new_like.account_id)
+            dis = delete(Like).where(Like.account_id == user.id)
             await session.execute(dis)
             await session.commit()
             return {"dislike" : "dislike"}
         else:
-            query = insert(Like).values(**new_like.dict())
+            query = insert(Like).values(**new_like.dict(), account_id=user.id)
             await session.execute(query)
             await session.commit()
             return {"status" : new_like}
-    except Exception as ex:
-        return {"error" : ex}
+    #except Exception as ex:
+    #    return {"error" : ex}
 
 
 
@@ -203,8 +203,7 @@ async def comment_of_post(post_id: int, session: AsyncSession = Depends(get_asyn
 @comment_router.post("/write_comment")
 async def add_comment(comment: CommentCreate, user : User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     try:
-        comment.account_id = user.id
-        query = insert(Comment).values(**comment.dict())
+        query = insert(Comment).values(**comment.dict(), account_id=user.id)
         await session.execute(query)
         await session.commit()
         return {"status" : 200}
