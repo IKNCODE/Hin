@@ -8,13 +8,13 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY . .
 
-ENV DB_HOST = localhost
-ENV DB_PORT = 5432
-ENV DB_NAME = history_in
-ENV DB_USER = postgres
-ENV DB_PASS = 123
+WORKDIR /app/src
 
-EXPOSE 8000
+ENV DB_HOST=host.docker.internal
+ENV DB_PORT=5432
+ENV DB_NAME=history_in
+ENV DB_USER=postgres
+ENV DB_PASS=123
 
-CMD ["cd", "src"]
-CMD ["uvicorn", "main:app"]
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

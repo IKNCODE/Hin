@@ -5,8 +5,9 @@ services:
     build: .
     ports:
       - "8000:8000"
+    network_mode: "host"
     environment:
-      POSTGRES_HOST: localhost
+      POSTGRES_HOST: host.docker.internal
       POSTGRES_PORT: 5432
       POSTGRES_DB: history_in
       POSTGRES_USER: postgres

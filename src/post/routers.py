@@ -19,7 +19,7 @@ from database import get_async_session
 
 post_router = APIRouter(prefix="/post", tags=["Post"]) # Роутер для работы с постами
 
-r = redis.Redis(host='localhost', port=6379, db=0) # Подключение Redis для кеширования данных
+r = redis.Redis(host='host.docker.internal', port=6379, db=0) # Подключение Redis для кеширования данных
 
 TTL = 100 # Время жизни ключа в Redis (100 секунд)
 
